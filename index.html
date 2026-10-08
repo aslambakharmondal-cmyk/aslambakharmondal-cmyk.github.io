@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Lucky Draw</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            background: radial-gradient(circle at center, #1b2845 0%, #080f1d 100%);
+            margin: 0; 
+            padding: 20px; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .container { 
+            max-width: 430px; 
+            width: 100%;
+            background: #ffffff; 
+            padding: 25px 20px; 
+            border-radius: 24px; 
+            box-shadow: 0 20px 45px rgba(0,0,0,0.45);
+            animation: springSlideUp 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            position: relative;
+            z-index: 10;
+        }
+
+        h2, h3 { color: #1a1a2e; margin-top: 0; }
+        p { color: #555; font-size: 14px; }
+
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            margin: 10px 0; 
+            border: 2px solid #e1e4e8; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            outline: none; 
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        input:focus {
+            border-color: #5d259c;
+            box-shadow: 0 0 12px rgba(93, 37, 156, 0.3);
+            transform: scale(1.01);
+        }
+
+        button, .btn { 
+            width: 100%; 
+            background: linear-gradient(135deg, #5d259c 0%, #3e1270 100%);
+            color: #ffd700; 
+            padding: 14px; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            text-decoration: none; 
+            display: inline-block; 
+            margin-top: 12px;
+            box-shadow: 0 6px 20px rgba(93, 37, 156, 0.45);
+            animation: pulseBtn 2.2s infinite ease-in-out;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        button:hover, .btn:hover { transform: translateY(-3px) scale(1.02); }
+        button:active, .btn:active { transform: translateY(1px) scale(0.98); }
+
+        .hidden { display: none !important; }
+
+        .step-transition {
+            animation: springFadeIn 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        /* Wheel Area */
+        .wheel-wrapper { 
+            position: relative; 
+            width: 310px; 
+            height: 310px; 
+            margin: 15px auto; 
+            border-radius: 50%; 
+            box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            border-radius: 50%;
+            border: 6px solid #ffd700;
+            display: block;
+            /* High-fidelity Spring & Bounce Overrun Curve */
+            transition: transform 5.4s cubic-bezier(0.22, 1.48, 0.36, 1);
+        }
+
+        .arrow { 
+            width: 0; 
+            height: 0; 
+            border-left: 16px solid transparent; 
+            border-right: 16px solid transparent; 
+            border-top: 28px solid #ff3b30; 
+            position: relative; 
+            margin: 0 auto -14px auto; 
+            z-index: 100;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.45));
+            transform-origin: 50% 0%;
+        }
+        .arrow.ticking {
+            animation: springTick 0.1s infinite alternate cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #result-box { 
+            margin-top: 15px; 
+            padding: 16px; 
+            background: #faf5ff; 
+            border: 2px dashed #7b2cbf; 
+            border-radius: 14px;
+            animation: springPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 9999;
+            pointer-events: none;
+            animation: fall 3s linear forwards;
+        }
+
+        .csv-btn { 
+            background: rgba(255,255,255,0.15); 
+            backdrop-filter: blur(8px);
+            color: #ffd700;
+            font-size: 12px; 
+            padding: 10px 18px; 
+            width: auto; 
+            margin-top: 25px; 
+            border-radius: 20px;
+            box-shadow: none;
+            animation: none;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+        }
+        .csv-btn:hover { background: rgba(255,255,255,0.25); }
+
+        @keyframes springSlideUp {
+            0% { opacity: 0; transform: translateY(60px) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes springFadeIn {
+            0% { opacity: 0; transform: scale(0.85); }
+            70% { transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes springPop {
+            0% { transform: scale(0.3); opacity: 0; }
+            65% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes springTick {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-24deg) scaleY(1.15); }
+        }
+        @keyframes pulseBtn {
+            0% { box-shadow: 0 0 0 0 rgba(93, 37, 156, 0.6); }
+            70% { box-shadow: 0 0 0 16px rgba(93, 37, 156, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(93, 37, 156, 0); }
+        }
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- Step 1: Form -->
+    <div id="step-form" class="step-transition">
+        <h2>🍫 Cadbury Lucky Draw 🍫</h2>
+        <p>Enter your name & phone number to spin and win Dairy Milk chocolates!</p>
+        <form id="infoForm">
+            <input type="text" id="custName" placeholder="Your Name" required>
+            <input type="tel" id="custPhone" placeholder="Mobile Number" required>
+            <button type="submit" id="submitBtn">Proceed to Spin 🎯</button>
+        </form>
+    </div>
+
+    <!-- Step 2: Google Review Button -->
+    <div id="step-review" class="hidden">
+        <h2>Rate Us on Google</h2>
+        <p>Give us a 5-star review on Google Maps to unlock your spin:</p>
+        <a id="reviewBtn" href="https://maps.app.goo.gl/RHqkM3NGkZ7yFKkF7" target="_blank" class="btn" style="background: linear-gradient(135deg, #007bff, #0056b3); color: white;" onclick="unlockWheel()">Submit Review on Google Maps</a>
+    </div>
+
+    <!-- Step 3: Spin Wheel -->
+    <div id="step-wheel" class="hidden">
+        <h3>Spin & Win Dairy Milk!</h3>
+        <p style="font-size: 13px; color: #666;">Release the spring to pick your chocolates</p>
+        <div class="arrow" id="tickerArrow"></div>
+        <div class="wheel-wrapper">
+            <canvas id="wheelCanvas" width="310" height="310"></canvas>
+        </div>
+        <button id="spinBtn" onclick="startSpin()">Spin the Wheel 🎰</button>
+
+        <div id="result-box" class="hidden">
+            <h3 id="prizeText" style="color: #4a154b; margin: 0;"></h3>
+            <p style="margin: 8px 0 0 0; font-weight: 500;">🎉 Show this screen to the counter to collect! 🎉</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- Customer List Download -->
+<div>
+    <button class="csv-btn" onclick="downloadCSV()">Download Customer List (Excel)</button>
+</div>
+
+<script>
+    var inMemoryList = [];
+
+    // Distinct slice background colors
+    const segments = [
+        { count: 1, color: '#e63946' },
+        { count: 2, color: '#2a9d8f' },
+        { count: 1, color: '#f4a261' },
+        { count: 1, color: '#457b9d' },
+        { count: 2, color: '#e76f51' },
+        { count: 1, color: '#9b5de5' },
+        { count: 1, color: '#f15bb5' },
+        { count: 3, color: '#ffd166' }, // 3 Dairy Milk sector
+        { count: 1, color: '#06d6a0' },
+        { count: 1, color: '#118ab2' }
+    ];
+
+    // Helper: Draw authentic Cadbury Dairy Milk style chocolate bar
+    function drawDairyMilkBar(ctx, x, y, scale) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+
+        // Chocolate Shadow
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.fillRect(-8, -17, 18, 36);
+
+        // Top Exposed Chocolate Section
+        ctx.fillStyle = "#3d1c06";
+        ctx.beginPath();
+        ctx.roundRect(-8, -18, 16, 12, [3, 3, 0, 0]);
+        ctx.fill();
+
+        // 3D Embossed Chocolate Chunks
+        ctx.fillStyle = "#291202";
+        ctx.fillRect(-6, -16, 5, 4);
+        ctx.fillRect(1, -16, 5, 4);
+        ctx.fillRect(-6, -10, 5, 3);
+        ctx.fillRect(1, -10, 5, 3);
+
+        // Silver inner wrapper peeking out
+        ctx.fillStyle = "#e0e1dd";
+        ctx.fillRect(-8, -7, 16, 3);
+
+        // Iconic Cadbury Purple Wrapper
+        ctx.fillStyle = "#481380";
+        ctx.beginPath();
+        ctx.roundRect(-8, -4, 16, 22, [0, 0, 3, 3]);
+        ctx.fill();
+
+        // Signature Diagonal Gold Ribbon on wrapper
+        ctx.strokeStyle = "#ffd700";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(-8, 3);
+        ctx.lineTo(8, -1);
+        ctx.stroke();
+
+        // "DM" Dairy Milk Gold Label
+        ctx.fillStyle = "#ffd700";
+        ctx.font = "bold 7px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("DM", 0, 11);
+
+        ctx.restore();
+    }
+
+    // Canvas Render Engine
+    function drawWheel() {
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const numSlices = segments.length;
+        const arc = (2 * Math.PI) / numSlices;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = centerX - 6;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < numSlices; i++) {
+            const angle = i * arc;
+
+            // Draw Segment Wedge
+            ctx.beginPath();
+            ctx.fillStyle = segments[i].color;
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, angle, angle + arc);
+            ctx.lineTo(centerX, centerY);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Draw Dairy Milk Bars
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(angle + arc / 2);
+
+            const count = segments[i].count;
+
+            if (count === 1) {
+                drawDairyMilkBar(ctx, radius * 0.65, 0, 0.95);
+            } else if (count === 2) {
+                drawDairyMilkBar(ctx, radius * 0.66, -10, 0.78);
+                drawDairyMilkBar(ctx, radius * 0.66, 10, 0.78);
+            } else if (count === 3) {
+                drawDairyMilkBar(ctx, radius * 0.68, -16, 0.68);
+                drawDairyMilkBar(ctx, radius * 0.68, 0, 0.68);
+                drawDairyMilkBar(ctx, radius * 0.68, 16, 0.68);
+            }
+
+            // Bold Label
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.shadowColor = 'rgba(0,0,0,0.85)';
+            ctx.shadowBlur = 4;
+            ctx.fillText(count + (count === 1 ? ' Bar' : ' Bars'), radius * 0.40, 4);
+
+            ctx.restore();
+        }
+    }
+
+    window.addEventListener('load', drawWheel);
+
+    // Step 1: Submit Details
+    document.getElementById('infoForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        var name = document.getElementById('custName').value.trim();
+        var phone = document.getElementById('custPhone').value.trim();
+
+        if (!name || !phone) return;
+
+        var record = { name: name, phone: phone, time: new Date().toLocaleString() };
+        inMemoryList.push(record);
+
+        try {
+            var list = JSON.parse(localStorage.getItem('shop_records') || '[]');
+            list.push(record);
+            localStorage.setItem('shop_records', JSON.stringify(list));
+        } catch (err) {}
+
+        var formStep = document.getElementById('step-form');
+        var reviewStep = document.getElementById('step-review');
+        
+        formStep.classList.add('hidden');
+        reviewStep.classList.remove('hidden');
+        reviewStep.classList.add('step-transition');
+    });
+
+    // Step 2: Unlock Wheel
+    function unlockWheel() {
+        setTimeout(function() {
+            var reviewStep = document.getElementById('step-review');
+            var wheelStep = document.getElementById('step-wheel');
+            
+            reviewStep.classList.add('hidden');
+            wheelStep.classList.remove('hidden');
+            wheelStep.classList.add('step-transition');
+            drawWheel();
+        }, 500);
+    }
+
+    // Segment Index Sets
+    const segments1Choc = [0, 2, 3, 5, 6, 8, 9];
+    const segments2Choc = [1, 4];
+    const segments3Choc = [7];
+
+    // Step 3: Realistic Spring Spin
+    var hasSpun = false;
+    function startSpin() {
+        if (hasSpun) return;
+        hasSpun = true;
+        
+        var btn = document.getElementById('spinBtn');
+        var arrow = document.getElementById('tickerArrow');
+        
+        btn.disabled = true;
+        btn.style.animation = 'none';
+        btn.style.opacity = '0.5';
+
+        arrow.classList.add('ticking');
+
+        // Weighted Probability: 75% for 1, 20% for 2, 5% for 3
+        var rand = Math.random() * 100;
+        var chosenIndex;
+        var winningPrize = "";
+
+        if (rand < 75) {
+            chosenIndex = segments1Choc[Math.floor(Math.random() * segments1Choc.length)];
+            winningPrize = "1 Dairy Milk Chocolate 🍫";
+        } else if (rand < 95) {
+            chosenIndex = segments2Choc[Math.floor(Math.random() * segments2Choc.length)];
+            winningPrize = "2 Dairy Milk Chocolates 🍫🍫";
+        } else {
+            chosenIndex = segments3Choc[0];
+            winningPrize = "3 Dairy Milk Chocolates 🍫🍫🍫";
+        }
+
+        // Align target segment to top center arrow (270° in canvas coords)
+        var segmentDegrees = 36;
+        var centerOffset = 18;
+        var targetAngle = 270 - (chosenIndex * segmentDegrees + centerOffset);
+        if (targetAngle < 0) targetAngle += 360;
+
+        var totalRotation = (360 * 8) + targetAngle; 
+
+        var canvas = document.getElementById('wheelCanvas');
+        canvas.style.transform = 'rotate(' + totalRotation + 'deg)';
+
+        // Stop pointer ticking right before the spring recoil settles
+        setTimeout(function() {
+            arrow.classList.remove('ticking');
+        }, 4600);
+
+        // Display results
+        setTimeout(function() {
+            document.getElementById('result-box').classList.remove('hidden');
+            document.getElementById('prizeText').innerText = 'Congratulations! You won ' + winningPrize;
+            triggerConfetti();
+        }, 5400);
+    }
+
+    function triggerConfetti() {
+        var colors = ['#ffd700', '#481380', '#e63946', '#2a9d8f', '#ffffff'];
+        for (var i = 0; i < 45; i++) {
+            var conf = document.createElement('div');
+            conf.className = 'confetti';
+            conf.style.left = Math.random() * 100 + 'vw';
+            conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            conf.style.animationDelay = (Math.random() * 1.5) + 's';
+            conf.style.transform = 'scale(' + (Math.random() * 1.2 + 0.6) + ')';
+            document.body.appendChild(conf);
+
+            setTimeout(function(c) {
+                if (c) c.remove();
+            }, 4500, conf);
+        }
+    }
+
+    function downloadCSV() {
+        var list = inMemoryList;
+        try {
+            var stored = JSON.parse(localStorage.getItem('shop_records') || '[]');
+            if (stored.length > 0) list = stored;
+        } catch(e) {}
+
+        if (list.length === 0) {
+            alert('No customer data submitted yet.');
+            return;
+        }
+
+        var csvContent = "data:text/csv;charset=utf-8,Name,Phone Number,Date\n";
+        list.forEach(function(item) {
+            csvContent += '"' + item.name + '","' + item.phone + '","' + item.time + '"\n';
+        });
+        
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "dairy_milk_lucky_draw.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+</body>
+</html>
